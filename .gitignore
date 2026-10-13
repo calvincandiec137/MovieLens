@@ -1,0 +1,44 @@
+# Dataset & large raw data files
+ml-25m/
+*.csv
+*.txt
+!REPORT_AND_VIVA.md
+
+# Processed outputs & local generated artifacts
+exports/
+charts/*.png
+metastore_db/
+derby.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+venv/
+
+# Node & Frontend (React)
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+node_modules/
+dist/
+build/
+.npm
+.yarn/
+*.log
+
+# Environment variables & secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

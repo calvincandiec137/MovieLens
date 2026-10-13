@@ -1,0 +1,68 @@
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    container_name: namenode
+    env_file:
+      - ./hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: /tmp/hadoop-hadoop/dfs/name
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9870/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  datanode:
+    image: apache/hadoop:3.3.6
+    hostname: datanode
+    container_name: datanode
+    env_file:
+      - ./hadoop.env
+    command: ["hdfs", "datanode"]
+    depends_on:
+      namenode:
+        condition: service_healthy
+
+  resourcemanager:
+    image: apache/hadoop:3.3.6
+    hostname: resourcemanager
+    container_name: resourcemanager
+    env_file:
+      - ./hadoop.env
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    depends_on:
+      namenode:
+        condition: service_healthy
+
+  nodemanager:
+    image: apache/hadoop:3.3.6
+    hostname: nodemanager
+    container_name: nodemanager
+    env_file:
+      - ./hadoop.env
+    command: ["yarn", "nodemanager"]
+    depends_on:
+      resourcemanager:
+        condition: service_started
+
+  hiveserver2:
+    image: apache/hive:4.0.0
+    hostname: hiveserver2
+    container_name: hiveserver2
+    environment:
+      SERVICE_NAME: hiveserver2
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    volumes:
+      - ./hive-config/core-site.xml:/opt/hive/conf/core-site.xml
+    depends_on:
+      namenode:
+        condition: service_healthy
