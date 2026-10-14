@@ -1,8 +1,29 @@
 import os
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
 
 os.makedirs("charts", exist_ok=True)
+
+def load_csv_two_cols(filepath, col1, col2):
+    rows = []
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    for line in lines[1:]:
+        match = re.match(r"^(.*),([^,]+)$", line)
+        if match:
+            rows.append({col1: match.group(1).strip(), col2: match.group(2).strip()})
+    return pd.DataFrame(rows)
+
+def load_csv_three_cols(filepath, col1, col2, col3):
+    rows = []
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    for line in lines[1:]:
+        match = re.match(r"^(.*),([^,]+),([^,]+)$", line)
+        if match:
+            rows.append({col1: match.group(1).strip(), col2: match.group(2).strip(), col3: match.group(3).strip()})
+    return pd.DataFrame(rows)
 
 df_dist = pd.read_csv("exports/rating_distribution.csv", encoding="utf-8-sig")
 df_dist.columns = [c.strip() for c in df_dist.columns]
@@ -15,10 +36,9 @@ plt.tight_layout()
 plt.savefig("charts/01_rating_distribution.png")
 plt.close()
 
-df_most = pd.read_csv("exports/most_rated_movies.csv", encoding="utf-8-sig")
-df_most.columns = [c.strip() for c in df_most.columns]
+df_most = load_csv_two_cols("exports/most_rated_movies.csv", "title", "total_reviews")
 plt.figure(figsize=(10, 6))
-plt.barh(df_most["title"][::-1], df_most["total_reviews"][::-1].astype(float), color="#2ecc71", edgecolor="black")
+plt.barh(df_most["title"][::-1], df_most["total_reviews"].astype(float)[::-1], color="#2ecc71", edgecolor="black")
 plt.xlabel("Number of Reviews")
 plt.title("Top 10 Most Rated Movies")
 plt.tight_layout()
@@ -50,12 +70,13 @@ plt.savefig("charts/04_genre_distribution.png")
 plt.close()
 
 df_user = pd.read_csv("exports/most_active_users.csv", encoding="utf-8-sig")
-df_user.columns = [c.strip() for c in df_user.columns]
+df_user.columns = [c.strip().lower() for c in df_user.columns]
 plt.figure(figsize=(8, 5))
-plt.bar(df_user["userId"].astype(str), df_user["ratings_given"].astype(float), color="#f39c12", edgecolor="black")
+plt.bar(df_user["userid"].astype(str), df_user["ratings_given"].astype(float), color="#f39c12", edgecolor="black")
 plt.xlabel("User ID")
 plt.ylabel("Total Ratings Given")
 plt.title("Top 10 Most Active Users")
 plt.tight_layout()
 plt.savefig("charts/05_most_active_users.png")
 plt.close()
+print("Charts successfully generated.")
