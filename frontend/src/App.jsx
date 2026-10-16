@@ -9,6 +9,7 @@ import LogsMonitor from './components/LogsMonitor'
 import Links from './components/Links'
 import Footer from './components/Footer'
 import { parseCsv } from './utils/csvParser'
+import { loadCsv } from './utils/dataLoader'
 
 export default function App() {
   const [ratingDist, setRatingDist] = useState([])
@@ -19,6 +20,7 @@ export default function App() {
   const [activeUsers, setActiveUsers] = useState([])
   const [mapReduceData, setMapReduceData] = useState([])
   const [clusterInfo, setClusterInfo] = useState(null)
+  const [dataSource, setDataSource] = useState('BUNDLED')
   const [missingFiles, setMissingFiles] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -34,15 +36,14 @@ export default function App() {
       ]
 
       const missing = []
+      let detectedSource = 'BUNDLED'
 
       for (const item of files) {
         try {
-          const res = await fetch(`/data/${item.name}`)
-          if (!res.ok) {
-            missing.push(item.name)
-            continue
+          const { text, source } = await loadCsv(item.name)
+          if (source === 'LOCAL') {
+            detectedSource = 'LOCAL'
           }
-          const text = await res.text()
           const rows = parseCsv(text)
           const formatted = rows.map(r => {
             const rowCopy = { ...r }
@@ -61,14 +62,13 @@ export default function App() {
         }
       }
 
+      setDataSource(detectedSource)
+
       try {
-        const mrRes = await fetch('/data/tag_wordcount.csv')
-        if (mrRes.ok) {
-          const mrText = await mrRes.text()
-          setMapReduceData(parseCsv(mrText))
-        }
+        const { text } = await loadCsv('tag_wordcount.csv')
+        setMapReduceData(parseCsv(text))
       } catch {
-        // MapReduce CSV is optional
+        // MapReduce CSV optional
       }
 
       try {
@@ -90,7 +90,7 @@ export default function App() {
 
   return (
     <div>
-      <Navbar />
+      <Navbar dataSource={dataSource} />
 
       {missingFiles.length > 0 && (
         <div className="container" style={{ marginTop: '20px' }}>
